@@ -1,10 +1,4 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: DisasterServer.Maps.Map
-// Assembly: DisasterServer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 543F9D20-F969-4EBF-B20C-D2589F4E3C54
-// Assembly location: C:\Users\User\Downloads\disasterlauncherwindows\server\DisasterServer.dll
-
-using DisasterServer.Data;
+﻿using DisasterServer.Data;
 using DisasterServer.Entities;
 using DisasterServer.Session;
 using DisasterServer.State;
@@ -34,18 +28,11 @@ namespace DisasterServer.Maps
     private int _ringTimer = -240;
     private Random _rand = new Random();
     private bool[] _ringSpawns;
-    private DateTime lastCreamSpawnRingsTime = DateTime.MinValue;
-    private readonly TimeSpan CreamSpawnRingsCooldown = TimeSpan.FromSeconds(40);
     private DateTime lastExellerSpawnCloneTime = DateTime.MinValue;
     private readonly TimeSpan ExellerSpawnCloneCooldown = TimeSpan.FromSeconds(4);
     private DateTime lastErectorBRingSpawnTime = DateTime.MinValue;
     private readonly TimeSpan ErectorBRingSpawnCooldown = TimeSpan.FromSeconds(41);
-    private DateTime lastETrackerTime = DateTime.MinValue;
-    private readonly TimeSpan ETrackerCooldown = TimeSpan.FromSeconds(30);
-    private DateTime lastProjectileTime = DateTime.MinValue;
-    private readonly TimeSpan ProjectileCooldown = TimeSpan.FromSeconds(23);
-
-        public virtual void Init(Server server)
+    public virtual void Init(Server server)
     {
       this._ringCoff = this.GetRingTime();
       lock (server.Peers)
@@ -96,13 +83,6 @@ namespace DisasterServer.Maps
             switch ((PacketType)reader.ReadByte())
             {
                 case PacketType.CLIENT_ETRACKER:
-                    if (DateTime.Now - lastETrackerTime < ETrackerCooldown)
-                    {
-                        break;
-                    }
-
-                    lastETrackerTime = DateTime.Now;
-
                     EggmanTracker eggmanTracker1 = new EggmanTracker();
                     eggmanTracker1.X = (int)reader.ReadUInt16();
                     eggmanTracker1.Y = (int)reader.ReadUInt16();
@@ -125,13 +105,6 @@ namespace DisasterServer.Maps
                         break;
                     }
                 case PacketType.CLIENT_TPROJECTILE:
-                    if (DateTime.Now - lastProjectileTime < ProjectileCooldown)
-                    {
-                        break;
-                    }
-
-                    lastProjectileTime = DateTime.Now;
-
                     if (this.FindOfType<TailsProjectile>().Length != 0)
                         break;
                     TailsProjectile tailsProjectile = new TailsProjectile();
@@ -227,13 +200,6 @@ namespace DisasterServer.Maps
             break;
           }
             case PacketType.CLIENT_CREAM_SPAWN_RINGS:
-                if (DateTime.Now - lastCreamSpawnRingsTime < CreamSpawnRingsCooldown)
-                {
-                    break;
-                }
-
-                lastCreamSpawnRingsTime = DateTime.Now;
-
                 ushort num4 = reader.ReadUInt16();
                 ushort num5 = reader.ReadUInt16();
                 if (reader.ReadBoolean())
