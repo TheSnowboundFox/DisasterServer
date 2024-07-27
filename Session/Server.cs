@@ -1,10 +1,4 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: DisasterServer.Session.Server
-// Assembly: DisasterServer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 543F9D20-F969-4EBF-B20C-D2589F4E3C54
-// Assembly location: C:\Users\User\Downloads\disasterlauncherwindows\server\DisasterServer.dll
-
-using DisasterServer.Data;
+﻿using DisasterServer.Data;
 using DisasterServer.State;
 using ExeNet;
 using System;
@@ -20,12 +14,9 @@ namespace DisasterServer.Session
 {
   public class Server
   {
-    private const int TCP_PORT = 7606;
-    private const int UDP_PORT = 8606;
     public bool IsRunning;
     public DisasterServer.State.State State = (DisasterServer.State.State) new Lobby();
     public Dictionary<ushort, Peer> Peers = new Dictionary<ushort, Peer>();
-    public int LastMap = -1;
     public MulticastServer MulticastServer;
     public SharedServer SharedServer;
     private Thread? _thread;
@@ -54,10 +45,6 @@ namespace DisasterServer.Session
         }
       }));
       this._thread.Priority = ThreadPriority.AboveNormal;
-      Thread thread = this._thread;
-      DefaultInterpolatedStringHandler interpolatedStringHandler = new DefaultInterpolatedStringHandler(7, 1);
-      string stringAndClear = interpolatedStringHandler.ToStringAndClear();
-      thread.Name = stringAndClear;
       this._thread.Start();
     }
 
@@ -213,8 +200,6 @@ namespace DisasterServer.Session
         interpolatedStringHandler.AppendLiteral("): ");
         interpolatedStringHandler.AppendFormatted(reason);
         Terminal.LogDebug(interpolatedStringHandler.ToStringAndClear());
-        interpolatedStringHandler = new DefaultInterpolatedStringHandler(7, 1);
-        string stringAndClear = interpolatedStringHandler.ToStringAndClear();
         try
         {
           EndPoint remoteEndPoint = session.RemoteEndPoint;

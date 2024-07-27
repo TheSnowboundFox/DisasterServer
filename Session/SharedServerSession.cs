@@ -1,11 +1,4 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: DisasterServer.Session.SharedServerSession
-// Assembly: DisasterServer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 543F9D20-F969-4EBF-B20C-D2589F4E3C54
-// Assembly location: C:\Users\User\Downloads\disasterlauncherwindows\server\DisasterServer.dll
-
-using DisasterServer;
-using DisasterServer.Data;
+﻿using DisasterServer.Data;
 using ExeNet;
 using System;
 using System.Collections.Generic;
@@ -43,8 +36,6 @@ namespace DisasterServer.Session
 
     protected override void OnConnected()
     {
-      DefaultInterpolatedStringHandler interpolatedStringHandler1 = new DefaultInterpolatedStringHandler(7, 1);
-      string stringAndClear = interpolatedStringHandler1.ToStringAndClear();
       lock (this._server.Peers)
       {
         if (KickList.Check((this.RemoteEndPoint as IPEndPoint).Address.ToString()))
@@ -52,14 +43,9 @@ namespace DisasterServer.Session
           this._server.DisconnectWithReason((TcpSession) this, "Kicked by server.");
           return;
         }
-        if (BanList.Check((this.RemoteEndPoint as IPEndPoint).Address.ToString()))
+        if (this._server.Peers.Count >= 14)
         {
-            this._server.DisconnectWithReason((TcpSession)this, "You were banned from this server.");
-            return;
-        }
-        if (this._server.Peers.Count >= 7)
-        {
-          this._server.DisconnectWithReason((TcpSession) this, "Server is full. (7/7)");
+          this._server.DisconnectWithReason((TcpSession) this, "Server is full. (14/14)");
           return;
         }
         Peer peer = new Peer()
@@ -85,8 +71,6 @@ namespace DisasterServer.Session
 
     protected override void OnDisconnected()
     {
-      DefaultInterpolatedStringHandler interpolatedStringHandler1 = new DefaultInterpolatedStringHandler(7, 1);
-      string stringAndClear = interpolatedStringHandler1.ToStringAndClear();
       lock (this._server.Peers)
       {
         Terminal.LogDebug("Disconnect Stage 1");
@@ -124,8 +108,6 @@ namespace DisasterServer.Session
 
     protected override void OnData(byte[] buffer, int length)
     {
-      DefaultInterpolatedStringHandler interpolatedStringHandler = new DefaultInterpolatedStringHandler(7, 1);
-      string stringAndClear = interpolatedStringHandler.ToStringAndClear();
       this.ProcessBytes(buffer, length);
       base.OnData(buffer, length);
     }
@@ -198,9 +180,7 @@ namespace DisasterServer.Session
 
     protected override void OnSocketError(SocketError error)
     {
-      DefaultInterpolatedStringHandler interpolatedStringHandler = new DefaultInterpolatedStringHandler(7, 1);
-      string stringAndClear = interpolatedStringHandler.ToStringAndClear();
-      interpolatedStringHandler = new DefaultInterpolatedStringHandler(20, 1);
+      DefaultInterpolatedStringHandler interpolatedStringHandler = new DefaultInterpolatedStringHandler(20, 1);
       interpolatedStringHandler.AppendLiteral("Caught SocketError: ");
       interpolatedStringHandler.AppendFormatted<SocketError>(error);
       Terminal.Log(interpolatedStringHandler.ToStringAndClear());
@@ -210,8 +190,6 @@ namespace DisasterServer.Session
 
     protected override void OnError(string message)
     {
-      DefaultInterpolatedStringHandler interpolatedStringHandler = new DefaultInterpolatedStringHandler(7, 1);
-      string stringAndClear = interpolatedStringHandler.ToStringAndClear();
       Terminal.Log("Caught Error: " + message);
       base.OnError(message);
     }
