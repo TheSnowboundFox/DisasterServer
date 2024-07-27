@@ -1,10 +1,4 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: ExeNet.TcpSession
-// Assembly: ExeNet, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 7AC46939-1C6E-4A4A-A8C2-645E334BBB85
-// Assembly location: C:\Users\User\Desktop\ExeNet.dll
-
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;

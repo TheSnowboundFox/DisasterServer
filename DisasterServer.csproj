@@ -2,28 +2,21 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <ApplicationVersion>1.0.0.0</ApplicationVersion>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Company>Team Exe Empire &amp; TheSlavonicFox</Company>
-    <FileVersion>1</FileVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
-    <Product>DisasterServer (Build by TheSlavonicFox)</Product>
-    <AssemblyTitle>DisasterServer</AssemblyTitle>
-    <AssemblyVersion>1</AssemblyVersion>
     <StartupObject>DisasterServer.Program</StartupObject>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
     <EnableNETAnalyzers>False</EnableNETAnalyzers>
-    <AnalysisLevel>latest-minimum</AnalysisLevel>
+    <AnalysisLevel>none</AnalysisLevel>
     <Nullable>enable</Nullable>
     <NoWin32Manifest>true</NoWin32Manifest>
     <Platforms>x64</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Configuration>Release</Configuration>
-    <IsPublishable>False</IsPublishable>
+    <IsPublishable>False</IsPublishable> 
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Configuration>Release</Configuration>

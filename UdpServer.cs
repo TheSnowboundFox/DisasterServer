@@ -1,10 +1,4 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: ExeNet.UdpServer
-// Assembly: ExeNet, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 7AC46939-1C6E-4A4A-A8C2-645E334BBB85
-// Assembly location: C:\Users\User\Desktop\ExeNet.dll
-
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -37,7 +31,7 @@ namespace ExeNet
         this._client = new UdpClient(this.Port);
         this._client.Client.ReceiveBufferSize = 128;
         this._client.Client.SendBufferSize = 128;
-        this._client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.IpTimeToLive, true);
+        this._client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
       }
       catch (Exception ex)
       {

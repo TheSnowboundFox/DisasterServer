@@ -82,7 +82,7 @@ namespace DisasterServer
       }
       else
       {
-        if (server.Peers.Count >= 8)
+        if (server.Peers.Count >= 14)
           return;
         DefaultInterpolatedStringHandler interpolatedStringHandler;
         lock (server.Peers)
@@ -123,10 +123,6 @@ namespace DisasterServer
         if (KickList.Check(str))
         {
             server.DisconnectWithReason(session, "Kick by host.");
-        }
-        else if (BanList.Check(str))
-        {
-            server.DisconnectWithReason(session, "Banned by host.");
         }
         else
         {

@@ -1,17 +1,5 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: DisasterServer.Terminal
-// Assembly: DisasterServer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 543F9D20-F969-4EBF-B20C-D2589F4E3C54
-// Assembly location: C:\Users\User\Downloads\disasterlauncherwindows\server\DisasterServer.dll
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
+﻿using System;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
 
 namespace DisasterServer
 {
@@ -56,25 +44,5 @@ namespace DisasterServer
       Console.ForegroundColor = ConsoleColor.Cyan;
       Console.WriteLine(stringAndClear);
     }
-        public static void LogCommand(string text)
-        {
-            // Сохраняем текущие позиции курсора
-            int currentLeft = Console.CursorLeft;
-            int currentTop = Console.CursorTop;
-
-            // Печатаем лог административной команды
-            string longTimeString = DateTime.Now.ToLongTimeString();
-            DefaultInterpolatedStringHandler interpolatedStringHandler = new DefaultInterpolatedStringHandler(9, 3);
-            interpolatedStringHandler.AppendLiteral("[");
-            interpolatedStringHandler.AppendFormatted(longTimeString);
-            interpolatedStringHandler.AppendLiteral(" COMMAND] ");
-            interpolatedStringHandler.AppendFormatted(text);
-            string stringAndClear = interpolatedStringHandler.ToStringAndClear();
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine(stringAndClear);
-
-            // Возвращаемся на строку, где выводится командная строка
-            Console.SetCursorPosition(currentLeft, currentTop);
-        }
     }
 }
