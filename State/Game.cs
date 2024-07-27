@@ -21,7 +21,6 @@ namespace DisasterServer.State
     private readonly ushort _exeId;
     private int _endTimer = -1;
     private int _demonCount;
-    private string _game_mode = Options.Get<string>("game_mode");
     private int _timeout = 60;
     private bool _initMap;
     private Dictionary<ushort, int> _lastPackets = new Dictionary<ushort, int>();
@@ -92,7 +91,7 @@ namespace DisasterServer.State
               if (!this._waiting)
               {
                 ushort key = fastBitReader.ReadUShort(ref data);
-                float X = fastBitReader.ReadFloat(ref data);
+                float num2 = fastBitReader.ReadFloat(ref data);
                 float num3 = fastBitReader.ReadFloat(ref data);
                 lock (server.Peers)
                 {
@@ -112,7 +111,7 @@ namespace DisasterServer.State
                         int num10 = (int) fastBitReader.ReadByte(ref data);
                         peer.Player.Invisible = fastBitReader.ReadBoolean(ref data);
                       }
-                      peer.Player.X = X;
+                      peer.Player.X = num2;
                       peer.Player.Y = num3;
                     }
                   }
@@ -419,7 +418,7 @@ namespace DisasterServer.State
                 if (peer.Player.DiedBefore || this._map.Timer <= 7200)
                 {
                   TcpPacket packet = new TcpPacket(PacketType.SERVER_GAME_DEATHTIMER_END);
-                  if (this._demonCount >= (int) ((double) (server.Peers.Count<KeyValuePair<ushort, Peer>>((Func<KeyValuePair<ushort, Peer>, bool>) (e => !e.Value.Waiting)) - 1) / 2.0))
+                  if (this._demonCount >= (int) ((double) (server.Peers.Count<KeyValuePair<ushort, Peer>>((Func<KeyValuePair<ushort, Peer>, bool>) (e => !e.Value.Waiting)) + 5) / 2.0))
                   {
                     packet.Write(0);
                   }
@@ -485,7 +484,7 @@ namespace DisasterServer.State
               if ((double) peer.Player.DeadTimer <= 0.0 || this._map.Timer <= 7200)
               {
                 TcpPacket packet = new TcpPacket(PacketType.SERVER_GAME_DEATHTIMER_END);
-                if (this._demonCount >= (int) ((double) (server.Peers.Count<KeyValuePair<ushort, Peer>>((Func<KeyValuePair<ushort, Peer>, bool>) (e => !e.Value.Waiting)) - 1) / 2.0))
+                if (this._demonCount >= (int) ((double) (server.Peers.Count<KeyValuePair<ushort, Peer>>((Func<KeyValuePair<ushort, Peer>, bool>) (e => !e.Value.Waiting)) + 5) / 2.0))
                 {
                   packet.Write(0);
                 }
