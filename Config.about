@@ -1,0 +1,107 @@
+//Here's the config explanation (v1.1.0.1.kappa)
+
+networking:
+	port:	8606    //Sets a port of your server.
+	server_count:	1   //Specifies an amount of sub-servers (lobbies) on your server.
+	target_version:	1101    //Specifies a version of client, required to join the server (Leave unchanged, if you're playing without any mods!).
+
+pairing:
+	maximum_players_per_lobby:	7   //Sets an amount of players able to join same sub-server (Be aware, that you won't be able to properly use CHOOSE_VOTEKICK, vise versa...).
+	ip_validation:	true    //Protects your server from twin-accounts (IT ISN'T A VPN PROTECTION!)
+	ping_limit: 250 //Divides players with normal ping and players, who's not eligible to play on your server due to their poor internet connection (I'd like to try playing disaster using a Dial-Up Modem XD).
+	player_maximum_errors:	30000   //Sets maximum packet arrival errors, before player kicked.
+
+logging:
+	log_debug:	false   //Also show Developer Info
+	log_to_file:	false   //Should the logs be saved into the text document, so you can read and debug it later.
+
+moderation: //.ban command won't be available if all is set to "false"!
+	ban_ip:	true    //Should player's IP be validated beyore he/she/it can join the server?
+	ban_udid:	true    //Anogolic
+	ban_nickname:	false   //Anogolic
+
+lobby_misc:
+	message_of_the_day:	"\\mods are disallowed on this server" //Tell a joke to your players.
+	lobby_timeout_timer:	25 //Bro, I give you N seconds to bring your crisps, or we're starting without you! (Семера одного не ждут!)
+	lobby_start_timer:	5   // fi... *oh crap* two... one...
+	votekick_cooldown:	30  //Specify how many time **vote kick/practice vote** will last.
+	apply_textchat_fixes:	false   //Set to "true" if you want the chat to work again. (Heh... v100)
+	authoritarian_mode:	false   //Only a god-given leader can start the game!
+	server_location:	"Saint Petersburg"  //Tell where your server is located (The string "%location%, required ping: %ping% or less" won't appear if "ping limit" is set to "65535" or this param is empty!).
+
+map_selection:
+	use_mapvote:	true    //Should the server decide what map should be next, or you'll decide by your own?
+	exclude_last_map:	true    //Should the server exclude the last map you've played on?
+	mapvote_timer:	30  //Anologic with "lobby_start_timer"
+	map_list:	[true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true]    //I HATE ANGEL ISLAND!
+
+character_selection:
+	charselect_mod_unlocked:	false   //I was amazed how icecoffee and coldesttea mode 100 players mode. That's motivated me to be a server-side med developer. (That's the first function I've done.)
+	allow_foreign_characters:	false   //Enable if you gonna play with custom-character mods.
+	charselect_timer:	30  //Anologic with "lobby_start_timer"
+
+gameplay:
+	respawn_time:	30  //Are you sure you want players to be demonised within 5 seconds?
+	sudden_death_timer:	120 //This params is beckoning me to set to "65536".
+	ring_appearance_timer:	60  //Wow, so many players all at once started running around, looking for the ring! But it's still closed.
+	escape_time:	50  //Well, it's your time to jump to the big ring.
+	spawn_rings:	true    //I swear it was a bug. But it was fun while we were testing it.
+	red_ring_chance:	11  //EXE won't be happy if you set this to "0". He propably doesn't want the red rings to disappear.
+	demonic_madness:	false   //All players will be demonised (Rise up from your graves!).
+	tails_projectile_speed: 14  //Wha-a-a-a-at a-a-a-a-a spe-e-e-e-ed!
+	tails_projectile_timeout_timer:	5   //Server's optimisation algorithm. Tails' projectile will disappear after flying for too long.
+
+banana:
+	disable_timer:	false   //Let's see who'll stand the last! (It's like a free mode in some old games.)
+	singleplayer:	false   //Banana8870 was using his own server build with player lower limit disabled, while he was testing something. Wish him good luck with mod developing!
+
+gmcycle:  //Ported from GMCycle.
+	overhell:	false   //The ring won't spawn. You need to stay alive until the timer runs out.
+
+results_misc:
+	use_results:	true    //The results shows us player stats in the end of the round.
+	results_timer:	15  //I agree, the default value is pretty high.
+	pride:	true    //Should the suffixes like "(i'm afraid to leave my camp spot)" be displayed? Rude!
+
+anticheat:
+	palette_anticheat:	true    //
+	zone_anticheat:	true
+	distance_anticheat:	true
+	ability_anticheat:	true    //I agree, cream's infinite ring spawn is not as fair as could be (Even the sally's shield hack is more interesting.).
+},
+map_specific:
+	limp_city:
+		"shocking_delay":	8,
+		"shocking_warning":	2,
+		"shocking_time":	2
+	
+	not_perfect:
+		switch_timer:	5
+		switch_timer_chase:	3
+		switch_warning_timer:	15
+		switch_warning_timer_chase:	2
+
+	kind_and_fair:
+		speedbox_timer:	25
+		speedbox_timer_offset:	5
+
+	nasty_paradise:
+		nap_snowballs:	true
+		ice_regeneration_timer:	15
+
+	hills:
+		thunder_timer:	15
+		thunder_timer_offset:	5
+
+	dark_tower:
+		stalactites_timer:	25
+		stalactites_timer_offset:	5
+
+	act9_walls:	true
+	pf_bring_spawn:	true
+	rmz_easy_mode:	false
+	ycr_gas_delay:	6
+	nap_snowballs:	true
+	tc_acid_delay:	4
+	hddoor_toggle_delay:	10
+}
