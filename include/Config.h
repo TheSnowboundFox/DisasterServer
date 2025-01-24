@@ -34,6 +34,7 @@ typedef struct
     bool        ban_udid;
     bool        ban_nickname;
     uint8_t	    op_default_level;
+    bool        banhammer_friendly_fire;
 } Moderation;
 typedef struct
 {
@@ -130,168 +131,178 @@ typedef struct
 
 typedef struct
 {
-    uint8_t     timer;
-    uint8_t     timer_offset;
+    uint8_t             timer;
+    uint8_t             timer_offset;
 } Speedbox;
 typedef struct
 {
-    Speedbox    speedbox;
+    Speedbox            speedbox;
 } KindAndFair;
 
 typedef struct
 {
-    bool        enabled;
+    bool                enabled;
 } Walls;
 typedef struct
 {
-    Walls        walls;
+    Walls               walls;
 } Act9;
 
 typedef struct
 {
-    bool        enabled;
+    bool                enabled;
 } Snowballs;
 typedef struct
 {
-    uint8_t     regeneration_timer;
+    uint8_t             regeneration_timer;
 } IceConfig;
 typedef struct
 {
-    Snowballs   snowballs;
-    IceConfig   ice;
+    Snowballs           snowballs;
+    IceConfig           ice;
 } NastyParadise;
 
 typedef struct
 {
-    bool     enabled;
+    bool                enabled;
 } BlackRings;
 typedef struct
 {
-    BlackRings  black_rings;
+    BlackRings          black_rings;
 } PricelessFreedom;
 
 typedef struct
 {
-    uint8_t     timer_offset;
-    uint8_t     timer;
+    uint8_t             timer_offset;
+    uint8_t             timer;
 } ThunderConfig;
 typedef struct
 {
-    ThunderConfig   thunder;
+    ThunderConfig       thunder;
 } Hills;
 
 typedef struct
 {
-    uint8_t     delay;
+    uint8_t             delay;
 } AcidConfig;
 typedef struct
 {
-    AcidConfig  acid;
+    AcidConfig          acid;
 } TortureCave;
 
 typedef struct
 {
-    uint8_t     timer;
-    uint8_t     timer_offset;
-    float       acceleration;
+    uint8_t             timer;
+    uint8_t             timer_offset;
+    double              acceleration;
 } Stalactites;
 typedef struct
 {
-    uint8_t     timer;
-    uint8_t     timer_offset;
-} Ball;
+    uint8_t             shift_per_tick;
+} Balls;
 typedef struct
 {
-    Stalactites stalactites;
+    Stalactites         stalactites;
+    Balls               balls;
 } DarkTower;
 
 typedef struct
 {
-    uint8_t     toggle_delay;
+    uint8_t             toggle_delay;
 } Doors;
 typedef struct
 {
-    Doors       doors;
+    Doors               doors;
 } HauntingDream;
 
 typedef struct
 {
-    double      velocity;
+    double              velocity;
 } DummyConfig;
 typedef struct
 {
-    DummyConfig dummy;
+    DummyConfig         dummy;
 } FartZone;
 
 typedef struct
 {
-    YouCantRun  you_cant_run;
-    LimbCity    limb_city;
-    NotPerfect  not_perfect;
-    KindAndFair kind_and_fair;
-    Act9        act9;
-    NastyParadise   nasty_paradise;
+    YouCantRun          you_cant_run;
+    LimbCity            limb_city;
+    NotPerfect          not_perfect;
+    KindAndFair         kind_and_fair;
+    Act9                act9;
+    NastyParadise       nasty_paradise;
     PricelessFreedom    priceless_freedom;
-    Hills       hills;
-    TortureCave torture_cave;
-    DarkTower   dark_tower;
-    HauntingDream   haunting_dream;
-    FartZone    fart_zone;
+    Hills               hills;
+    TortureCave         torture_cave;
+    DarkTower           dark_tower;
+    HauntingDream       haunting_dream;
+    FartZone            fart_zone;
 } MapSpecific;
 
 typedef struct
 {
-    int8_t      projectile_speed;
-    uint8_t     projectile_timeout_timer;
+    int8_t              projectile_speed;
+    uint8_t             projectile_timeout_timer;
 } Tails;
 typedef struct
 {
-    Tails       tails;
+    Tails               tails;
 } CharacterSpecific;
 
 typedef struct
 {
-    Global      global;
-    MapSpecific map_specific;
+    Global              global;
+    MapSpecific         map_specific;
     CharacterSpecific   character_specific;
 } EntitiesMisc;
 typedef struct
 {
-    uint8_t     respawn_time;
-    uint8_t     sudden_death_timer;
-    uint8_t     ring_appearance_timer;
-    uint8_t     escape_time;
-    uint8_t     demonization_percentage;
-    bool        exe_camp_penalty;
-    bool        hide_player_characters;
-    bool        enable_achievements;
-    bool        enable_sounds;
-    bool        rmz_easy_mode;
-    bool        practice_mode;
-    EntitiesMisc    entities_misc;
-    Anticheat   anticheat;
-    Banana      banana;
-    GMCycle     gmcycle;
+    uint8_t             respawn_time;
+    uint8_t             sudden_death_timer;
+    uint8_t             ring_appearance_timer;
+    uint8_t             escape_time;
+    uint8_t             demonization_percentage;
+    bool                exe_camp_penalty;
+    bool                hide_player_characters;
+    bool                enable_achievements;
+    bool                enable_sounds;
+    bool                rmz_easy_mode;
+    EntitiesMisc        entities_misc;
+    Anticheat           anticheat;
+    Banana              banana;
+    GMCycle             gmcycle;
 } Gameplay;
 typedef struct
 {
-    bool        enabled;
-    uint8_t     timer;
-    bool        pride;
+    bool                enabled;
+    uint8_t             timer;
+    bool                pride;
     
 } ResultsMisc;
 typedef struct
 {
-    Mutex       map_list_lock;
-    Networking networking;
-    Pairing pairing;
-    Logging logging;
-    Moderation  moderation;
-    LobbyMisc   lobby_misc;
-    MapSelection    map_selection;
+    bool                enabled;
+
+} UserInterface;
+typedef struct
+{
+    bool                ignore_inadequate_configuration;
+} Other;
+typedef struct
+{
+    Mutex               map_list_lock;
+    Networking          networking;
+    Pairing             pairing;
+    Logging             logging;
+    Moderation          moderation;
+    LobbyMisc           lobby_misc;
+    MapSelection        map_selection;
     CharacterSelection  character_selection;
-    Gameplay    gameplay;
-    ResultsMisc results_misc;
+    Gameplay            gameplay;
+    ResultsMisc         results_misc;
+    UserInterface       user_interface;
+    Other               other;
 } Config;
 
 extern Config g_config;

@@ -14,11 +14,9 @@
 #include <stdint.h>
 
 #define TICKSPERSEC 60
-#define SERVER_VERSION "v1.1.0.1.sigma"
+#define SERVER_VERSION "v1.1.0.1.tau"
 #define UPPER_BRACKET "-----\\advanced/server~-----"
 #define LOWER_BRACKET "------------------------"
-
-
 
 #define STR_HELPER(x) #x
 #define STRINGIFY(x)  STR_HELPER(x)

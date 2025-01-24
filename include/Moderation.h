@@ -19,9 +19,7 @@ extern cJSON* g_banned_udids;
 extern cJSON* g_banned_nicknames;
 extern cJSON* g_timeouts;
 extern cJSON* g_ops;
-extern Mutex g_banned_ipMut;
-extern Mutex g_banned_udidMut;
-extern Mutex g_banned_nicknameMut;
+extern Mutex g_banMut;
 extern Mutex g_timeoutMut;
 extern Mutex g_opMut;
 

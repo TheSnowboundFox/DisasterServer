@@ -39,6 +39,7 @@ typedef struct Entity
 #define CMD_CHANCE 2868936686
 #define CMD_REBOOT 3295634527
 #define CMD_VM 59505
+#define CMD_START 1770248296
 
 bool lobby_init				(Server* server);
 bool lobby_state_join		(PeerData* v);

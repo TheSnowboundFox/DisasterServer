@@ -18,6 +18,10 @@
 #include <string.h>
 #include <cJSON.h>
 
+#ifdef SYS_USE_SDL2
+#include <ui/Main.h>
+#endif
+
 cJSON* ip_addr_list = NULL;
 Mutex ip_addr_mut;
 
@@ -606,6 +610,10 @@ bool server_broadcast_ex(Server* server, Packet* packet, bool reliable, uint16_t
 
 bool server_state_joined(PeerData* v)
 {
+#ifdef SYS_USE_SDL2
+	ui_update_playerlist(v->server);
+#endif
+
 	Packet pack;
 	PacketCreate(&pack, SERVER_LOBBY_EXE_CHANCE);
 	PacketWrite(&pack, packet_write8, v->exe_chance);
@@ -662,6 +670,10 @@ bool server_state_handle(PeerData* v, Packet* packet)
 
 bool server_state_left(PeerData* v)
 {
+#ifdef SYS_USE_SDL2
+	ui_update_playerlist(v->server);
+#endif
+
     Packet pack;
 	PacketCreate(&pack, SERVER_PLAYER_LEFT);
 	PacketWrite(&pack, packet_write16, v->id);
@@ -728,7 +740,7 @@ unsigned long server_cmd_parse(String* string)
 
 bool server_cmd_handle(Server* server, unsigned long hash, PeerData* v, String* msg)
 {
-    Debug("Processing command with hash: %lu\n", hash);
+    Debug("Processing command with hash: %lu", hash);
 
 	Packet pack;
 	switch(hash)
@@ -950,26 +962,31 @@ bool server_cmd_handle(Server* server, unsigned long hash, PeerData* v, String* 
                     RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":status" CLRCODE_RST " server statistics"));
                     break;
                 case 2:
-                    snprintf(lobby_msg, 64, CLRCODE_GRA CLRCODE_GRA ".map" CLRCODE_RST " choose map (1-%d)", MAP_COUNT);
-                    RAssert(server_send_msg(v->server, v->peer, lobby_msg));
                     RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ".kick" CLRCODE_RST " kick a player"));
                     RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ".ban" CLRCODE_RST " ban a player"));
                     RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":unban" CLRCODE_RST " unban a player"));
                     RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ".op" CLRCODE_RST " make a player an admin"));
-                    RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":stop" CLRCODE_RST " force end round"));
                     RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":reboot" CLRCODE_RST " reboot the server"));
                     break;
 
                 case 3:
                     RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ".vk" CLRCODE_RST " vote kick"));
-                    RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":vm" CLRCODE_RST " vote specific map"));
-                    RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":chance" CLRCODE_RST " change your exe chance"));
+					RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ".vp" CLRCODE_RST " vote practice"));
+					RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":vm" CLRCODE_RST " vote specific map"));
                     RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ".y" CLRCODE_RST " vote for"));
+					RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ".yes" CLRCODE_RST " vote for"));
                     break;
 
                 case 4:
                     RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ".m" CLRCODE_RST " mute the chat (local command)"));
                     break;
+
+				case 5:
+					RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":chance" CLRCODE_RST " change your exe chance"));
+                    RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":stop" CLRCODE_RST " force end round"));
+                    snprintf(lobby_msg, 64, CLRCODE_GRA CLRCODE_GRA ".map" CLRCODE_RST " choose map (1-%d)", MAP_COUNT);
+                    RAssert(server_send_msg(v->server, v->peer, lobby_msg));
+					RAssert(server_send_msg(v->server, v->peer, CLRCODE_GRA ":start" CLRCODE_RST " force start round"));
 
                 default:
                     RAssert(server_send_msg(v->server, v->peer, "void"));

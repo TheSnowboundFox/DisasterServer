@@ -230,7 +230,6 @@ bool lobby_state_handle(PeerData* v, Packet* packet)
             if(strstr(msg.value, "52") && strcmp(g_config.lobby_misc.server_location, "Saint Petersburg") == 0)
             {
                 RAssert(server_send_msg(v->server, v->peer, CLRCODE_ORG "да здравствует " CLRCODE_GRN "санкт-петербург " CLRCODE_RED "и этот город наш" CLRCODE_RST));
-                return true;
             }
 
 			bool ignore = true;
@@ -354,6 +353,7 @@ bool lobby_state_handle(PeerData* v, Packet* packet)
 				}
 
 				case CMD_VM:
+				case CMD_VP:
 				{
                     if(g_config.lobby_misc.authoritarian_mode || g_config.lobby_misc.anonymous_mode)
                         break;
@@ -411,23 +411,28 @@ bool lobby_state_handle(PeerData* v, Packet* packet)
 						break;
 					}
 
-					int ind;
-					if (sscanf(msg.value, ":vm %d", &ind) <= 0)
-					{
-						RAssert(server_send_msg(v->server, v->peer, CLRCODE_RED "example:~ :vm 1"));
-						break;
-					}
+					if (hash == CMD_VM) {
+						int ind;
+						if (sscanf(msg.value, ":vm %d", &ind) <= 0)
+						{
+							RAssert(server_send_msg(v->server, v->peer, CLRCODE_RED "example:~ :vm 1"));
+							break;
+						}
 
-					ind--;
-					if (ind < 0 || ind >= MAP_COUNT)
-					{
-						char msg[128];
-						snprintf(msg, 128, CLRCODE_RED "map should be between 1 and %d", MAP_COUNT);
-						RAssert(server_send_msg(v->server, v->peer, msg));
-						break;
-					}
+						ind--;
+						if (ind < 0 || ind >= MAP_COUNT)
+						{
+							char msg[128];
+							snprintf(msg, 128, CLRCODE_RED "map should be between 1 and %d", MAP_COUNT);
+							RAssert(server_send_msg(v->server, v->peer, msg));
+							break;
+						}
 
-					v->server->lobby.voting_map = ind;
+						v->server->lobby.voting_map = ind;
+
+					} else if (hash == CMD_VP) {
+						v->server->lobby.voting_map = 20;
+					}
 
 					char buffer[356];
 					snprintf(buffer, 356, "%s~ " CLRCODE_YLW "started map vote for %s" CLRCODE_RST ".", v->nickname.value, g_mapList[v->server->lobby.voting_map].name);
@@ -471,6 +476,18 @@ bool lobby_state_handle(PeerData* v, Packet* packet)
 					}
 					else
 						server_send_msg(v->server, v->peer, CLRCODE_RED "not enough participants.");
+					break;
+				}
+
+				case CMD_START:
+				{
+					if (v->op < 2)
+					{
+						RAssert(server_send_msg(v->server, v->peer, CLRCODE_RED "your permission level is too low"));
+						break;
+					}
+
+					return mapvote_init(v->server);
 					break;
 				}
 			}

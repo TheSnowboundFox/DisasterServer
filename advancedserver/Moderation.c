@@ -13,9 +13,7 @@ cJSON*	g_banned_udids = NULL;
 cJSON*	g_banned_nicknames = NULL;
 cJSON*	g_timeouts = NULL;
 cJSON*	g_ops = NULL;
-Mutex	g_banned_ipMut;
-Mutex	g_banned_udidMut;
-Mutex	g_banned_nicknameMut;
+Mutex	g_banMut;
 Mutex	g_timeoutMut;
 Mutex	g_opMut;
 
@@ -24,9 +22,7 @@ bool init_balls(void)
     (void)mkdir("Player_Data", 0777);
 
     MutexCreate(g_timeoutMut);
-    MutexCreate(g_banned_ipMut);
-    MutexCreate(g_banned_udidMut);
-    MutexCreate(g_banned_nicknameMut);
+    MutexCreate(g_banMut);
     MutexCreate(g_opMut);
 
     RAssert(collection_init(&g_timeouts,	TIMEOUTS_FILE,	"{}"));
@@ -43,7 +39,7 @@ bool ban_add(const char* nickname, const char* udid, const char* ip)
     bool res = true;
     bool changed = false;
 
-    MutexLock(g_banned_ipMut);
+    MutexLock(g_banMut);
     {
         bool changed = false;
         if (!cJSON_HasObjectItem(g_banned_ips, ip))
@@ -52,22 +48,12 @@ bool ban_add(const char* nickname, const char* udid, const char* ip)
             cJSON_AddItemToObject(g_banned_ips, ip, js);
             changed = true;
         }
-    }
-    MutexUnlock(g_banned_ipMut);
-
-    MutexLock(g_banned_udidMut);
-    {
         if (!cJSON_HasObjectItem(g_banned_udids, udid))
         {
             cJSON* js = cJSON_CreateString(nickname);
             cJSON_AddItemToObject(g_banned_udids, udid, js);
             changed = true;
         }
-    }
-    MutexUnlock(g_banned_udidMut);
-
-    MutexLock(g_banned_nicknameMut);
-    {
         if (!cJSON_HasObjectItem(g_banned_nicknames, nickname))
         {
             cJSON* js = cJSON_CreateString(nickname);
@@ -75,7 +61,7 @@ bool ban_add(const char* nickname, const char* udid, const char* ip)
             changed = true;
         }
     }
-    MutexUnlock(g_banned_nicknameMut);
+    MutexUnlock(g_banMut);
 
     if (changed)
         res = collection_save(BANNED_IPS_FILE, g_banned_ips) &&
@@ -90,7 +76,7 @@ bool ban_revoke(const char* argument)
     bool res = false;
     bool changed = false;
 
-    MutexLock(g_banned_ipMut);
+    MutexLock(g_banMut);
     {
 
         if (cJSON_HasObjectItem(g_banned_ips, argument))
@@ -98,28 +84,20 @@ bool ban_revoke(const char* argument)
             cJSON_DeleteItemFromObject(g_banned_ips, argument);
             changed = true;
         }
-    }
-    MutexUnlock(g_banned_ipMut);
 
-    MutexLock(g_banned_udidMut);
-    {
         if (cJSON_HasObjectItem(g_banned_udids, argument))
         {
             cJSON_DeleteItemFromObject(g_banned_udids, argument);
             changed = true;
         }
-    }
-    MutexUnlock(g_banned_udidMut);
 
-    MutexLock(g_banned_nicknameMut);
-    {
         if (cJSON_HasObjectItem(g_banned_nicknames, argument))
         {
             cJSON_DeleteItemFromObject(g_banned_nicknames, argument);
             changed = true;
         }
     }
-    MutexUnlock(g_banned_nicknameMut);
+    MutexUnlock(g_banMut);
 
     if(changed)
         res = collection_save(BANNED_IPS_FILE, g_banned_ips) &&
@@ -132,33 +110,24 @@ bool ban_revoke(const char* argument)
 bool ban_check(const char* nickname, const char* udid, const char* ip, bool* result)
 {
     *result = false;
-
-    if (g_config.moderation.ban_ip) {
-        MutexLock(g_banned_ipMut);
-        {
+    MutexLock(g_banMut);
+    {
+        if (g_config.moderation.ban_ip) {
             if (cJSON_HasObjectItem(g_banned_ips, ip))
                 *result = true;
         }
-        MutexUnlock(g_banned_ipMut);
-    }
 
-    if (g_config.moderation.ban_udid) {
-        MutexLock(g_banned_udidMut);
-        {
+        if (g_config.moderation.ban_udid) {
             if (cJSON_HasObjectItem(g_banned_udids, udid))
                 *result = true;
         }
-        MutexUnlock(g_banned_udidMut);
-    }
 
-    if (g_config.moderation.ban_nickname) {
-        MutexLock(g_banned_nicknameMut);
-        {
+        if (g_config.moderation.ban_nickname) {
             if (cJSON_HasObjectItem(g_banned_nicknames, nickname))
                 *result = true;
         }
-        MutexUnlock(g_banned_nicknameMut);
     }
+    MutexUnlock(g_banMut);
 
     return true;
 }

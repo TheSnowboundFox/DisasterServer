@@ -8,9 +8,11 @@ bool pf_init(Server* server)
 	RAssert(map_ring(server, 5));
 	RAssert(map_time(server, 2.585 * TICKSPERSEC, 10)); //155
 
-    if(g_config.gameplay.entities_misc.map_specific.priceless_freedom.black_rings.enabled)
-        for (int i = 0; i < 29; i++)
+	if (g_config.gameplay.entities_misc.map_specific.priceless_freedom.black_rings.enabled) {
+		for (int i = 0; i < 29; i++) {
             RAssert(game_spawn(server, (Entity*)&(MakeBlackRing(MAP_BRING, MAP_BRING)), sizeof(BRing), NULL));
+		}
+	}
 
 	RAssert(game_spawn(server, (Entity*)&(MakePFLift(0, 1669, 1016)), sizeof(PFLift), NULL));
 	RAssert(game_spawn(server, (Entity*)&(MakePFLift(1, 1069, 704)),  sizeof(PFLift), NULL));

@@ -4,7 +4,7 @@
 bool npctrl_tick(Server* server, Entity* entity)
 {
 	NPController* ctrl = (NPController*)entity;
-	if (server->game.time_sec <= TICKSPERSEC && !ctrl->balls)
+	if (server->game.time_sec <= g_config.gameplay.ring_appearance_timer && !ctrl->balls)
 	{
 		ctrl->timer = 5 * TICKSPERSEC;
 		ctrl->state = NPC_PREPARE;

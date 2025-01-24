@@ -15,6 +15,20 @@
 	#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 #endif
 
+#ifdef SYS_USE_SDL2
+#define DEBUG_TYPE "DBG "
+#define INFO_TYPE "INF "
+#define WARN_TYPE "WRN "
+#define ERROR_TYPE "ERR "
+
+#define LOG_GRN CLRCODE_GRN
+#define LOG_GRA CLRCODE_GRA
+#define LOG_RED CLRCODE_RED
+#define LOG_BLU CLRCODE_BLU
+#define LOG_YLW CLRCODE_YLW
+#define LOG_PUR CLRCODE_PUR
+#define LOG_RST CLRCODE_RST
+#else
 #define DEBUG_TYPE "\x1B[36mDBG \x1B[0m"
 #define INFO_TYPE "\x1B[32mINF \x1B[0m"
 #define WARN_TYPE "\x1B[33mWRN \x1B[0m"
@@ -27,6 +41,7 @@
 #define LOG_YLW
 #define LOG_PUR
 #define LOG_RST
+#endif
 
 #define Log(type, fmt, ...) log_fmt(fmt, type, __FILENAME__, __LINE__, ##__VA_ARGS__)
 #define Debug(fmt, ...) if(g_config.logging.log_debug) log_fmt(fmt, DEBUG_TYPE, __FILENAME__, __LINE__, ##__VA_ARGS__)
