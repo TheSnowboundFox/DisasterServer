@@ -560,6 +560,7 @@ bool config_save(void)
             cJSON_AddBoolToObject(moderation, "ban_udid", g_config.moderation.ban_udid);
             cJSON_AddBoolToObject(moderation, "ban_nickname", g_config.moderation.ban_nickname);
             cJSON_AddNumberToObject(moderation, "op_default_level", g_config.moderation.op_default_level);
+            cJSON_AddBoolToObject(moderation, "banhammer_friendly_fire", g_config.moderation.banhammer_friendly_fire);
         }
         cJSON_AddItemToObject(json, "moderation", moderation);
 
