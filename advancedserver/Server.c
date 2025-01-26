@@ -1080,7 +1080,7 @@ bool server_msg_handle(Server *server, PacketType type, PeerData *v, Packet *pac
 					if (!peer)
 						continue;
 
-                    if (peer->id == pid && peer->op < 3)
+                    if (peer->id == pid && (peer->op < 3 || g_config.moderation.banhammer_friendly_fire))
 					{
 						RAssert(ban_add(peer->nickname.value, peer->udid.value, peer->ip.value));
 						server_disconnect(v->server, peer->peer, DR_BANNEDBYHOST, NULL);
@@ -1103,7 +1103,7 @@ bool server_msg_handle(Server *server, PacketType type, PeerData *v, Packet *pac
 					if (!peer)
 						continue;
 
-                    if (peer->id == pid && peer->op < 3)
+                    if (peer->id == pid && (peer->op < 3 || g_config.moderation.banhammer_friendly_fire))
 					{
 						RAssert(timeout_set(peer->nickname.value, peer->udid.value, peer->ip.value, time(NULL) + 60));
 						server_disconnect(v->server, peer->peer, DR_KICKEDBYHOST, NULL);

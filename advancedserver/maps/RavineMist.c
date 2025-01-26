@@ -39,12 +39,11 @@ bool rmz_checkstate(Server* server)
 
 bool rmz_spawnshards(Server* server, Player* player)
 {
-    if(!g_config.gameplay.rmz_easy_mode)
-        for (uintptr_t i = 0; i < player->data[0]; i++)
-        {
-            Debug("shard spawned at %f %f", player->pos.x, player->pos.y);
-            RAssert(game_spawn(server, (Entity*)&(MakeShard((player->pos.x + (-8 + rand() % 17)), player->pos.y, 1)), sizeof(Shard), NULL));
-        }
+    for (uintptr_t i = 0; i < player->data[0]; i++)
+    {
+        Debug("shard spawned at %f %f", player->pos.x, player->pos.y);
+        RAssert(game_spawn(server, (Entity*)&(MakeShard((player->pos.x + (-8 + rand() % 17)), player->pos.y, 1)), sizeof(Shard), NULL));
+    }
 
 	player->data[0] = 0;
 	return true;
@@ -55,41 +54,40 @@ bool rmz_init(Server* server)
 	RAssert(map_time(server, 3 * TICKSPERSEC, 20));
 	RAssert(map_ring(server, 5));
 
-	// slugs
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(1901, 392)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2193, 392)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2468, 392)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(1188, 860)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2577, 1952)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2564, 2264)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2782, 2264)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(1441, 2264)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(884, 2264)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(988, 2004)), sizeof(SlugSpawner), NULL));
-	RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(915, 2004)), sizeof(SlugSpawner), NULL));
+	if (g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.enabled) {
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(1901, 392)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2193, 392)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2468, 392)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(1188, 860)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2577, 1952)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2564, 2264)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(2782, 2264)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(1441, 2264)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(884, 2264)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(988, 2004)), sizeof(SlugSpawner), NULL));
+		RAssert(game_spawn(server, (Entity*)&(MakeSlugSpawn(915, 2004)), sizeof(SlugSpawner), NULL));
+	}
 
-    if(!g_config.gameplay.rmz_easy_mode){
-        // shards
-        Shard shards[12] =
-        {
-            MakeShard(862, 248, 0),
-            MakeShard(3078, 248, 0),
-            MakeShard(292, 558, 0),
-            MakeShard(2918, 558, 0),
-            MakeShard(1100, 820, 0),
-            MakeShard(980, 1188, 0),
-            MakeShard(1870, 1252, 0),
-            MakeShard(2180, 1508, 0),
-            MakeShard(2920, 2216, 0),
-            MakeShard(282, 2228, 0),
-            MakeShard(1318, 1916, 0),
-            MakeShard(3010, 1766, 0),
-        };
-        shuffle(shards, 12);
+    // shards
+    Shard shards[12] =
+    {
+        MakeShard(862, 248, 0),
+        MakeShard(3078, 248, 0),
+        MakeShard(292, 558, 0),
+        MakeShard(2918, 558, 0),
+        MakeShard(1100, 820, 0),
+        MakeShard(980, 1188, 0),
+        MakeShard(1870, 1252, 0),
+        MakeShard(2180, 1508, 0),
+        MakeShard(2920, 2216, 0),
+        MakeShard(282, 2228, 0),
+        MakeShard(1318, 1916, 0),
+        MakeShard(3010, 1766, 0),
+    };
+    shuffle(shards, 12);
 
-        for (int i = 0; i < 7; i++)
-            RAssert(game_spawn(server, (Entity*)&shards[i], sizeof(Shard), NULL));
-    }
+    for (int i = 0; i < g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.amount; i++)
+        RAssert(game_spawn(server, (Entity*)&shards[i], sizeof(Shard), NULL));
 
 	return true;
 }
@@ -103,7 +101,12 @@ bool rmz_tick(Server* server)
 
         if (server->game.time_sec <= g_config.gameplay.escape_time && server->game.bring_state < BS_ACTIVATED)
 		{
-            if((7 - game_find(server, NULL, "shard", 7) >= 6) || g_config.gameplay.rmz_easy_mode)
+            if(
+				(g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.amount -
+				game_find(server, NULL, "shard",
+				g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.amount) >=
+				g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.required_for_exit)
+			)
 				game_bigring(server, BS_ACTIVATED);
 		}
 	}

@@ -71,7 +71,6 @@ Config g_config = {
         .hide_player_characters = false,
         .enable_achievements = true,
         .enable_sounds = true,
-        .rmz_easy_mode = false,
         .entities_misc = {
             .global = {
                 .rings = {
@@ -83,6 +82,17 @@ Config g_config = {
                 },
             },
             .map_specific = {
+                .ravine_mist = {
+                    .shards = {
+                        .amount = 7,
+                        .required_for_exit = 6
+                    },
+                    .slugs = {
+                        .enabled = true,
+                        .ring_chance = 40,
+                        .red_ring_chance = 10
+                    }
+                },
                 .you_cant_run = {
                     .gas = {
                         .delay = 6
@@ -159,6 +169,9 @@ Config g_config = {
                 .fart_zone = {
                     .dummy = {
                         .velocity = 0.046875
+                    },
+                    .black_rings = {
+                        .enabled = true
                     }
                 }
             },
@@ -198,14 +211,21 @@ Config g_config = {
 
 bool config_verify(void)
 {
-    bool is_adequate = true;
+    if (
+    (
+        g_config.gameplay.ring_appearance_timer < g_config.gameplay.escape_time
+        && !g_config.gameplay.banana.disable_timer
+        && !g_config.gameplay.gmcycle.overhell
+    )
+    || g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.amount > 12
+    || g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.amount <
+    g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.required_for_exit
+    || g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.ring_chance +
+    g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.red_ring_chance > 100
+    || g_config.lobby_misc.lobby_ready_required_percentage > 100)
+        return false;
 
-    if (g_config.gameplay.ring_appearance_timer < g_config.gameplay.escape_time
-    && !g_config.gameplay.banana.disable_timer
-    && !g_config.gameplay.gmcycle.overhell)
-        is_adequate = false;
-
-    return is_adequate;
+    return true;
 }
 
 bool config_init(void)
@@ -267,6 +287,7 @@ bool config_init(void)
         g_config.moderation.ban_udid = cJSON_IsTrue(cJSON_GetObjectItem(moderation, "ban_udid"));
         g_config.moderation.ban_nickname = cJSON_IsTrue(cJSON_GetObjectItem(moderation, "ban_nickname"));
         g_config.moderation.op_default_level = cJSON_GetObjectItem(moderation, "op_default_level")->valueint;
+        g_config.moderation.banhammer_friendly_fire = cJSON_IsTrue(cJSON_GetObjectItem(moderation, "banhammer_friendly_fire"));
     }
 
     cJSON* lobby_misc = cJSON_GetObjectItem(json, "lobby_misc");
@@ -315,7 +336,6 @@ bool config_init(void)
         g_config.gameplay.hide_player_characters = cJSON_IsTrue(cJSON_GetObjectItem(gameplay, "hide_player_characters"));
         g_config.gameplay.enable_achievements = cJSON_IsTrue(cJSON_GetObjectItem(gameplay, "enable_achievements"));
         g_config.gameplay.enable_sounds = cJSON_IsTrue(cJSON_GetObjectItem(gameplay, "enable_sounds"));
-        g_config.gameplay.rmz_easy_mode = cJSON_IsTrue(cJSON_GetObjectItem(gameplay, "rmz_easy_mode"));
 
         cJSON* anticheat = cJSON_GetObjectItem(gameplay, "anticheat");
         {
@@ -350,6 +370,22 @@ bool config_init(void)
 
             cJSON* map_specific = cJSON_GetObjectItem(entities_misc, "map_specific");
             {
+                cJSON* ravine_mist = cJSON_GetObjectItem(map_specific, "ravine_mist");
+                {
+                    cJSON* shards = cJSON_GetObjectItem(ravine_mist, "shards");
+                    {
+                        g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.amount = cJSON_GetObjectItem(shards, "amount")->valueint;
+                        g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.required_for_exit = cJSON_GetObjectItem(shards, "required_for_exit")->valueint;
+                    }
+
+                    cJSON* slugs = cJSON_GetObjectItem(ravine_mist, "slugs");
+                    {
+                        g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.enabled = cJSON_IsTrue(cJSON_GetObjectItem(slugs, "enabled"));
+                        g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.ring_chance = cJSON_GetObjectItem(slugs, "ring_chance")->valueint;
+                        g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.red_ring_chance = cJSON_GetObjectItem(slugs, "red_ring_chance")->valueint;
+                    }
+                }
+
                 cJSON* you_cant_run = cJSON_GetObjectItem(map_specific, "you_cant_run");
                 {
                     cJSON* gas = cJSON_GetObjectItem(you_cant_run, "gas");
@@ -399,8 +435,10 @@ bool config_init(void)
 
                 cJSON* priceless_freedom = cJSON_GetObjectItem(map_specific, "priceless_freedom");
                 {
-                    cJSON* black_rings = cJSON_GetObjectItem(priceless_freedom, "brack_rings");
-                    g_config.gameplay.entities_misc.map_specific.priceless_freedom.black_rings.enabled = cJSON_IsTrue(cJSON_GetObjectItem(black_rings, "timer"));
+                    cJSON* black_rings = cJSON_GetObjectItem(priceless_freedom, "black_rings");
+                    {
+                        g_config.gameplay.entities_misc.map_specific.priceless_freedom.black_rings.enabled = cJSON_IsTrue(cJSON_GetObjectItem(black_rings, "enabled"));
+                    }
                 }
 
                 cJSON* hills = cJSON_GetObjectItem(map_specific, "hills");
@@ -417,23 +455,38 @@ bool config_init(void)
                 cJSON* dark_tower = cJSON_GetObjectItem(map_specific, "dark_tower");
                 {
                     cJSON* stalactites = cJSON_GetObjectItem(dark_tower, "stalactites");
-                    g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.timer = cJSON_GetObjectItem(stalactites, "timer")->valueint;
-                    g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.timer_offset = cJSON_GetObjectItem(stalactites, "timer_offset")->valueint;
-                    g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.acceleration = cJSON_GetObjectItem(stalactites, "acceleration")->valuedouble;
+                    {
+                        g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.timer = cJSON_GetObjectItem(stalactites, "timer")->valueint;
+                        g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.timer_offset = cJSON_GetObjectItem(stalactites, "timer_offset")->valueint;
+                        g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.acceleration = cJSON_GetObjectItem(stalactites, "acceleration")->valuedouble;
+                    }
 
                     cJSON* balls = cJSON_GetObjectItem(dark_tower, "balls");
-                    g_config.gameplay.entities_misc.map_specific.dark_tower.balls.shift_per_tick = cJSON_GetObjectItem(balls, "shift_per_tick")->valuedouble;
+                    {
+                        g_config.gameplay.entities_misc.map_specific.dark_tower.balls.shift_per_tick = cJSON_GetObjectItem(balls, "shift_per_tick")->valuedouble;
+                    }
                 }
 
                 cJSON* haunting_dream = cJSON_GetObjectItem(map_specific, "haunting_dream");
-
-                cJSON* doors = cJSON_GetObjectItem(haunting_dream, "doors");
-                g_config.gameplay.entities_misc.map_specific.haunting_dream.doors.toggle_delay = cJSON_GetObjectItem(doors, "toggle_delay")->valueint;
+                {
+                    cJSON* doors = cJSON_GetObjectItem(haunting_dream, "doors");
+                    {
+                        g_config.gameplay.entities_misc.map_specific.haunting_dream.doors.toggle_delay = cJSON_GetObjectItem(doors, "toggle_delay")->valueint;
+                    }
+                }
 
                 cJSON* fart_zone = cJSON_GetObjectItem(map_specific, "fart_zone");
+                {
+                    cJSON* dummy = cJSON_GetObjectItem(fart_zone, "dummy");
+                    {
+                        g_config.gameplay.entities_misc.map_specific.fart_zone.dummy.velocity = cJSON_GetObjectItem(dummy, "velocity")->valuedouble;
+                    }
 
-                cJSON* dummy = cJSON_GetObjectItem(fart_zone, "dummy");
-                g_config.gameplay.entities_misc.map_specific.fart_zone.dummy.velocity = cJSON_GetObjectItem(dummy, "velocity")->valuedouble;
+                    cJSON* fart_zone_black_rings = cJSON_GetObjectItem(fart_zone, "black_rings");
+                    {
+                        g_config.gameplay.entities_misc.map_specific.fart_zone.black_rings.enabled = cJSON_IsTrue(cJSON_GetObjectItem(fart_zone_black_rings, "enabled"));
+                    }
+                }
             }
 
             cJSON* character_specific = cJSON_GetObjectItem(entities_misc, "character_specific");
@@ -466,7 +519,7 @@ bool config_init(void)
 
     if (!g_config.other.ignore_inadequate_configuration && !config_verify()) {
         Err("Ильич, ты чо, долбаēб что ли?");
-        disaster_terminate();
+        exit(1);
     }
 
 	return true;
@@ -476,253 +529,312 @@ bool config_save(void)
 {
     cJSON* json = cJSON_CreateObject();
     RAssert(json);
-
-    cJSON* networking = cJSON_CreateObject();
     {
-        cJSON_AddNumberToObject(networking, "port", g_config.networking.port);
-        cJSON_AddNumberToObject(networking, "server_count", g_config.networking.server_count);
-        cJSON_AddNumberToObject(networking, "target_version", g_config.networking.target_version);
+        cJSON* networking = cJSON_CreateObject();
+        {
+            cJSON_AddNumberToObject(networking, "port", g_config.networking.port);
+            cJSON_AddNumberToObject(networking, "server_count", g_config.networking.server_count);
+            cJSON_AddNumberToObject(networking, "target_version", g_config.networking.target_version);
+        }
+        cJSON_AddItemToObject(json, "networking", networking);
+
+        cJSON* pairing = cJSON_CreateObject();
+        {
+            cJSON_AddNumberToObject(pairing, "maximum_players_per_lobby", g_config.pairing.maximum_players_per_lobby);
+            cJSON_AddBoolToObject(pairing, "ip_validation", g_config.pairing.ip_validation);
+            cJSON_AddNumberToObject(pairing, "ping_limit", g_config.pairing.ping_limit);
+            cJSON_AddNumberToObject(pairing, "player_maximum_errors", g_config.pairing.player_maximum_errors);
+        }
+        cJSON_AddItemToObject(json, "pairing", pairing);
+
+        cJSON* logging = cJSON_CreateObject();
+        {
+            cJSON_AddBoolToObject(logging, "log_debug", g_config.logging.log_debug);
+            cJSON_AddBoolToObject(logging, "log_to_file", g_config.logging.log_to_file);
+        }
+        cJSON_AddItemToObject(json, "logging", logging);
+
+        cJSON* moderation = cJSON_CreateObject();
+        {
+            cJSON_AddBoolToObject(moderation, "ban_ip", g_config.moderation.ban_ip);
+            cJSON_AddBoolToObject(moderation, "ban_udid", g_config.moderation.ban_udid);
+            cJSON_AddBoolToObject(moderation, "ban_nickname", g_config.moderation.ban_nickname);
+            cJSON_AddNumberToObject(moderation, "op_default_level", g_config.moderation.op_default_level);
+        }
+        cJSON_AddItemToObject(json, "moderation", moderation);
+
+        cJSON* lobby_misc = cJSON_CreateObject();
+        {
+            cJSON_AddStringToObject(lobby_misc, "message_of_the_day", g_config.lobby_misc.message_of_the_day);
+            cJSON_AddNumberToObject(lobby_misc, "lobby_timeout_timer", g_config.lobby_misc.lobby_timeout_timer);
+            cJSON_AddNumberToObject(lobby_misc, "lobby_start_timer", g_config.lobby_misc.lobby_start_timer);
+            cJSON_AddNumberToObject(lobby_misc, "votekick_cooldown", g_config.lobby_misc.votekick_cooldown);
+            cJSON_AddStringToObject(lobby_misc, "server_location", g_config.lobby_misc.server_location);
+            cJSON_AddBoolToObject(lobby_misc, "apply_textchat_fixes", g_config.lobby_misc.apply_textchat_fixes);
+            cJSON_AddBoolToObject(lobby_misc, "authoritarian_mode", g_config.lobby_misc.authoritarian_mode);
+            cJSON_AddNumberToObject(lobby_misc, "lobby_ready_required_percentage", g_config.lobby_misc.lobby_ready_required_percentage);
+            cJSON_AddBoolToObject(lobby_misc, "kick_unready_before_starting", g_config.lobby_misc.kick_unready_before_starting);
+            cJSON_AddStringToObject(lobby_misc, "hosts_name", g_config.lobby_misc.hosts_name);
+            cJSON_AddBoolToObject(lobby_misc, "anonymous_mode", g_config.lobby_misc.anonymous_mode);
+        }
+        cJSON_AddItemToObject(json, "lobby_misc", lobby_misc);
+
+        cJSON* map_selection = cJSON_CreateObject();
+        {
+            cJSON_AddBoolToObject(map_selection, "enabled", g_config.map_selection.enabled);
+            cJSON_AddBoolToObject(map_selection, "exclude_last_map", g_config.map_selection.exclude_last_map);
+            cJSON_AddNumberToObject(map_selection, "timer", g_config.map_selection.timer);
+            cJSON* map_list = cJSON_CreateArray();
+            for (int i = 0; i < 21; ++i) {
+                cJSON_AddItemToArray(map_list, cJSON_CreateBool(g_config.map_selection.map_list[i]));
+            }
+            cJSON_AddItemToObject(map_selection, "map_list", map_list);
+        }
+        cJSON_AddItemToObject(json, "map_selection", map_selection);
+
+        cJSON* character_selection = cJSON_CreateObject();
+        {
+            cJSON_AddBoolToObject(character_selection, "charselect_mod_unlocked", g_config.character_selection.charselect_mod_unlocked);
+            cJSON_AddBoolToObject(character_selection, "allow_foreign_characters", g_config.character_selection.allow_foreign_characters);
+            cJSON_AddNumberToObject(character_selection, "charselect_timer", g_config.character_selection.charselect_timer);
+        }
+        cJSON_AddItemToObject(json, "character_selection", character_selection);
+
+        cJSON* gameplay = cJSON_CreateObject();
+        {
+            cJSON_AddNumberToObject(gameplay, "respawn_time", g_config.gameplay.respawn_time);
+            cJSON_AddNumberToObject(gameplay, "sudden_death_timer", g_config.gameplay.sudden_death_timer);
+            cJSON_AddNumberToObject(gameplay, "ring_appearance_timer", g_config.gameplay.ring_appearance_timer);
+            cJSON_AddNumberToObject(gameplay, "escape_time", g_config.gameplay.escape_time);
+            cJSON_AddNumberToObject(gameplay, "demonization_percentage", g_config.gameplay.demonization_percentage);
+            cJSON_AddBoolToObject(gameplay, "exe_camp_penalty", g_config.gameplay.exe_camp_penalty);
+            cJSON_AddBoolToObject(gameplay, "hide_player_characters", g_config.gameplay.hide_player_characters);
+            cJSON_AddBoolToObject(gameplay, "enable_achievements", g_config.gameplay.enable_achievements);
+            cJSON_AddBoolToObject(gameplay, "enable_sounds", g_config.gameplay.enable_sounds);
+
+
+            cJSON* anticheat = cJSON_CreateObject();
+            {
+                cJSON_AddBoolToObject(anticheat, "palette_anticheat", g_config.gameplay.anticheat.palette_anticheat);
+                cJSON_AddBoolToObject(anticheat, "zone_anticheat", g_config.gameplay.anticheat.zone_anticheat);
+                cJSON_AddBoolToObject(anticheat, "distance_anticheat", g_config.gameplay.anticheat.distance_anticheat);
+                cJSON_AddBoolToObject(anticheat, "ability_anticheat", g_config.gameplay.anticheat.ability_anticheat);
+            }
+            cJSON_AddItemToObject(gameplay, "anticheat", anticheat);
+
+            cJSON* banana = cJSON_CreateObject();
+            {
+                cJSON_AddBoolToObject(banana, "disable_timer", g_config.gameplay.banana.disable_timer);
+                cJSON_AddBoolToObject(banana, "singleplayer", g_config.gameplay.banana.singleplayer);
+            }
+            cJSON_AddItemToObject(gameplay, "banana", banana);
+
+            cJSON* gmcycle = cJSON_CreateObject();
+            {
+                cJSON_AddBoolToObject(gmcycle, "overhell", g_config.gameplay.gmcycle.overhell);
+            }
+            cJSON_AddItemToObject(gameplay, "gmcycle", gmcycle);
+
+            cJSON* entities_misc = cJSON_CreateObject();
+            {
+                cJSON* global = cJSON_CreateObject();
+                {
+                    cJSON* rings = cJSON_CreateObject();
+                    cJSON_AddBoolToObject(rings, "enabled", g_config.gameplay.entities_misc.global.rings.enabled);
+                    cJSON_AddNumberToObject(rings, "red_ring_chance", g_config.gameplay.entities_misc.global.rings.red_ring_chance);
+                    cJSON_AddItemToObject(global, "rings", rings);
+
+                    cJSON* spikes = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(spikes, "timer", g_config.gameplay.entities_misc.global.spikes.timer);
+                    cJSON_AddItemToObject(global, "spikes", spikes);
+                }
+                cJSON_AddItemToObject(entities_misc, "global", global);
+
+                cJSON* map_specific = cJSON_CreateObject();
+                {
+                    cJSON* ravine_mist = cJSON_CreateObject();
+                    {
+                        cJSON* shards = cJSON_CreateObject();
+                        {
+                            cJSON_AddNumberToObject(shards, "amount", g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.amount);
+                            cJSON_AddNumberToObject(shards, "required_for_exit", g_config.gameplay.entities_misc.map_specific.ravine_mist.shards.required_for_exit);
+                        }
+                        cJSON_AddItemToObject(ravine_mist, "shards", shards);
+
+                        cJSON* slugs = cJSON_CreateObject();
+                        {
+                            cJSON_AddBoolToObject(slugs, "enabled", g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.enabled);
+                            cJSON_AddNumberToObject(slugs, "ring_chance", g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.ring_chance);
+                            cJSON_AddNumberToObject(slugs, "red_ring_chance", g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.red_ring_chance);
+                        }
+                        cJSON_AddItemToObject(ravine_mist, "slugs", slugs);
+                    }
+                    cJSON_AddItemToObject(map_specific, "ravine_mist", ravine_mist);
+
+                    cJSON* you_cant_run = cJSON_CreateObject();
+                    {
+                        cJSON* gas = cJSON_CreateObject();
+                        cJSON_AddNumberToObject(gas, "delay", g_config.gameplay.entities_misc.map_specific.you_cant_run.gas.delay);
+                        cJSON_AddItemToObject(you_cant_run, "gas", gas);
+                    }
+                    cJSON_AddItemToObject(map_specific, "you_cant_run", you_cant_run);
+
+                    cJSON* limp_city = cJSON_CreateObject();
+
+                    cJSON* chain = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(chain, "delay", g_config.gameplay.entities_misc.map_specific.limb_city.chain.delay);
+                    cJSON_AddNumberToObject(chain, "warning", g_config.gameplay.entities_misc.map_specific.limb_city.chain.warning);
+                    cJSON_AddNumberToObject(chain, "shocking_time", g_config.gameplay.entities_misc.map_specific.limb_city.chain.shocking_time);
+                    cJSON_AddItemToObject(limp_city, "chain", chain);
+
+                    cJSON* eye = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(eye, "recharge_strength", g_config.gameplay.entities_misc.map_specific.limb_city.eye.recharge_strength);
+                    cJSON_AddNumberToObject(eye, "recharge_timer", g_config.gameplay.entities_misc.map_specific.limb_city.eye.recharge_timer);
+                    cJSON_AddNumberToObject(eye, "use_cost", g_config.gameplay.entities_misc.map_specific.limb_city.eye.use_cost);
+                    cJSON_AddItemToObject(limp_city, "eye", eye);
+
+                    cJSON_AddItemToObject(map_specific, "limp_city", limp_city);
+
+                    cJSON* not_perfect = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(not_perfect, "switch_timer", g_config.gameplay.entities_misc.map_specific.not_perfect.switch_timer);
+                    cJSON_AddNumberToObject(not_perfect, "switch_timer_chase", g_config.gameplay.entities_misc.map_specific.not_perfect.switch_timer_chase);
+                    cJSON_AddNumberToObject(not_perfect, "switch_warning_timer", g_config.gameplay.entities_misc.map_specific.not_perfect.switch_warning_timer);
+                    cJSON_AddNumberToObject(not_perfect, "switch_warning_timer_chase", g_config.gameplay.entities_misc.map_specific.not_perfect.switch_warning_timer_chase);
+                    cJSON_AddItemToObject(map_specific, "not_perfect", not_perfect);
+
+                    cJSON* kind_and_fair = cJSON_CreateObject();
+
+                    cJSON* speedbox = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(speedbox, "timer", g_config.gameplay.entities_misc.map_specific.kind_and_fair.speedbox.timer);
+                    cJSON_AddNumberToObject(speedbox, "timer_offset", g_config.gameplay.entities_misc.map_specific.kind_and_fair.speedbox.timer_offset);
+                    cJSON_AddItemToObject(kind_and_fair, "speedbox", speedbox);
+
+                    cJSON_AddItemToObject(map_specific, "kind_and_fair", kind_and_fair);
+
+                    cJSON* act9 = cJSON_CreateObject();
+
+                    cJSON* walls = cJSON_CreateObject();
+                    cJSON_AddBoolToObject(walls, "enabled", g_config.gameplay.entities_misc.map_specific.act9.walls.enabled);
+                    cJSON_AddItemToObject(act9, "walls", walls);
+
+                    cJSON_AddItemToObject(map_specific, "act9", act9);
+
+                    cJSON* nasty_paradise = cJSON_CreateObject();
+
+                    cJSON* snowballs = cJSON_CreateObject();
+                    cJSON_AddBoolToObject(snowballs, "enabled", g_config.gameplay.entities_misc.map_specific.nasty_paradise.snowballs.enabled);
+                    cJSON_AddItemToObject(nasty_paradise, "snowballs", snowballs);
+
+                    cJSON* ice = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(ice, "regeneration_timer", g_config.gameplay.entities_misc.map_specific.nasty_paradise.ice.regeneration_timer);
+                    cJSON_AddItemToObject(nasty_paradise, "ice", ice);
+
+                    cJSON_AddItemToObject(map_specific, "nasty_paradise", nasty_paradise);
+
+                    cJSON* priceless_freedom = cJSON_CreateObject();
+                    {
+                        cJSON* black_rings = cJSON_CreateObject();
+                        {
+                            cJSON_AddBoolToObject(black_rings, "enabled", g_config.gameplay.entities_misc.map_specific.priceless_freedom.black_rings.enabled);
+                        }
+                        cJSON_AddItemToObject(priceless_freedom, "black_rings", black_rings);
+                    }
+                    cJSON_AddItemToObject(map_specific, "priceless_freedom", priceless_freedom);
+
+                    cJSON* hills = cJSON_CreateObject();
+
+                    cJSON* thunder = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(thunder, "timer", g_config.gameplay.entities_misc.map_specific.hills.thunder.timer);
+                    cJSON_AddNumberToObject(thunder, "timer_offset", g_config.gameplay.entities_misc.map_specific.hills.thunder.timer_offset);
+                    cJSON_AddItemToObject(hills, "thunder", thunder);
+
+                    cJSON_AddItemToObject(map_specific, "hills", hills);
+
+                    cJSON* torture_cave = cJSON_CreateObject();
+
+                    cJSON* acid = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(acid, "delay", g_config.gameplay.entities_misc.map_specific.torture_cave.acid.delay);
+                    cJSON_AddItemToObject(torture_cave, "acid", acid);
+
+                    cJSON_AddItemToObject(map_specific, "torture_cave", torture_cave);
+
+                    cJSON* dark_tower = cJSON_CreateObject();
+
+                    cJSON* stalactites = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(stalactites, "timer", g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.timer);
+                    cJSON_AddNumberToObject(stalactites, "timer_offset", g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.timer_offset);
+                    cJSON_AddNumberToObject(stalactites, "acceleration", g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.acceleration);
+                    cJSON_AddItemToObject(dark_tower, "stalactites", stalactites);
+
+                    cJSON* balls = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(balls, "shift_per_tick", g_config.gameplay.entities_misc.map_specific.dark_tower.balls.shift_per_tick);
+                    cJSON_AddItemToObject(dark_tower, "balls", balls);
+
+                    cJSON_AddItemToObject(map_specific, "dark_tower", dark_tower);
+
+                    cJSON* haunting_dream = cJSON_CreateObject();
+                    {
+                        cJSON* doors = cJSON_CreateObject();
+                        {
+                            cJSON_AddNumberToObject(doors, "toggle_delay", g_config.gameplay.entities_misc.map_specific.haunting_dream.doors.toggle_delay);
+                        }
+                        cJSON_AddItemToObject(haunting_dream, "doors", doors);
+                    }
+                    cJSON_AddItemToObject(map_specific, "haunting_dream", haunting_dream);
+
+                    cJSON* fart_zone = cJSON_CreateObject();
+                    {
+                        cJSON* dummy = cJSON_CreateObject();
+                        {
+                            cJSON_AddNumberToObject(dummy, "velocity", g_config.gameplay.entities_misc.map_specific.fart_zone.dummy.velocity);
+                        }
+                        cJSON_AddItemToObject(fart_zone, "dummy", dummy);
+
+                        cJSON* fart_zone_black_rings = cJSON_CreateObject();
+                        {
+                            cJSON_AddBoolToObject(fart_zone_black_rings, "enabled", g_config.gameplay.entities_misc.map_specific.priceless_freedom.black_rings.enabled);
+                        }
+                        cJSON_AddItemToObject(fart_zone, "black_rings", fart_zone_black_rings);
+                    }
+                    cJSON_AddItemToObject(map_specific, "fart_zone", fart_zone);
+                }
+                cJSON_AddItemToObject(entities_misc, "map_specific", map_specific);
+
+                cJSON* character_specific = cJSON_CreateObject();
+                {
+                    cJSON* tails = cJSON_CreateObject();
+                    {
+                        cJSON_AddNumberToObject(tails, "projectile_speed", g_config.gameplay.entities_misc.character_specific.tails.projectile_speed);
+                        cJSON_AddNumberToObject(tails, "projectile_timeout_timer", g_config.gameplay.entities_misc.character_specific.tails.projectile_timeout_timer);
+                    }
+                    cJSON_AddItemToObject(character_specific, "tails", tails);
+                }
+                cJSON_AddItemToObject(entities_misc, "character_specific", character_specific);
+            }
+            cJSON_AddItemToObject(gameplay, "entities_misc", entities_misc);
+        }
+        cJSON_AddItemToObject(json, "gameplay", gameplay);
+
+        cJSON* results_misc = cJSON_CreateObject();
+        {
+            cJSON_AddBoolToObject(results_misc, "enabled", g_config.results_misc.enabled);
+            cJSON_AddNumberToObject(results_misc, "timer", g_config.results_misc.timer);
+            cJSON_AddBoolToObject(results_misc, "pride", g_config.results_misc.pride);
+        }
+        cJSON_AddItemToObject(json, "results_misc", results_misc);
+
+        cJSON* user_interface = cJSON_CreateObject();
+        {
+            cJSON_AddBoolToObject(user_interface, "enabled", g_config.user_interface.enabled);
+        }
+        cJSON_AddItemToObject(json, "user_interface", user_interface);
+
+        cJSON* other = cJSON_CreateObject();
+        {
+            cJSON_AddBoolToObject(other, "ignore_inadequate_configuration", g_config.other.ignore_inadequate_configuration);
+        }
+        cJSON_AddItemToObject(json, "other", other);
     }
-    cJSON_AddItemToObject(json, "networking", networking);
-
-    cJSON* pairing = cJSON_CreateObject();
-    cJSON_AddNumberToObject(pairing, "maximum_players_per_lobby", g_config.pairing.maximum_players_per_lobby);
-    cJSON_AddBoolToObject(pairing, "ip_validation", g_config.pairing.ip_validation);
-    cJSON_AddNumberToObject(pairing, "ping_limit", g_config.pairing.ping_limit);
-    cJSON_AddNumberToObject(pairing, "player_maximum_errors", g_config.pairing.player_maximum_errors);
-    cJSON_AddItemToObject(json, "pairing", pairing);
-
-    cJSON* logging = cJSON_CreateObject();
-    cJSON_AddBoolToObject(logging, "log_debug", g_config.logging.log_debug);
-    cJSON_AddBoolToObject(logging, "log_to_file", g_config.logging.log_to_file);
-    cJSON_AddItemToObject(json, "logging", logging);
-
-    cJSON* moderation = cJSON_CreateObject();
-    cJSON_AddBoolToObject(moderation, "ban_ip", g_config.moderation.ban_ip);
-    cJSON_AddBoolToObject(moderation, "ban_udid", g_config.moderation.ban_udid);
-    cJSON_AddBoolToObject(moderation, "ban_nickname", g_config.moderation.ban_nickname);
-    cJSON_AddNumberToObject(moderation, "op_default_level", g_config.moderation.op_default_level);
-    cJSON_AddItemToObject(json, "moderation", moderation);
-
-    cJSON* lobby_misc = cJSON_CreateObject();
-    cJSON_AddStringToObject(lobby_misc, "message_of_the_day", g_config.lobby_misc.message_of_the_day);
-    cJSON_AddNumberToObject(lobby_misc, "lobby_timeout_timer", g_config.lobby_misc.lobby_timeout_timer);
-    cJSON_AddNumberToObject(lobby_misc, "lobby_start_timer", g_config.lobby_misc.lobby_start_timer);
-    cJSON_AddNumberToObject(lobby_misc, "votekick_cooldown", g_config.lobby_misc.votekick_cooldown);
-    cJSON_AddStringToObject(lobby_misc, "server_location", g_config.lobby_misc.server_location);
-    cJSON_AddBoolToObject(lobby_misc, "apply_textchat_fixes", g_config.lobby_misc.apply_textchat_fixes);
-    cJSON_AddBoolToObject(lobby_misc, "authoritarian_mode", g_config.lobby_misc.authoritarian_mode);
-    cJSON_AddNumberToObject(lobby_misc, "lobby_ready_required_percentage", g_config.lobby_misc.lobby_ready_required_percentage);
-    cJSON_AddBoolToObject(lobby_misc, "kick_unready_before_starting", g_config.lobby_misc.kick_unready_before_starting);
-    cJSON_AddStringToObject(lobby_misc, "hosts_name", g_config.lobby_misc.hosts_name);
-    cJSON_AddBoolToObject(lobby_misc, "anonymous_mode", g_config.lobby_misc.anonymous_mode);
-    cJSON_AddItemToObject(json, "lobby_misc", lobby_misc);
-
-    cJSON* map_selection = cJSON_CreateObject();
-    cJSON_AddBoolToObject(map_selection, "enabled", g_config.map_selection.enabled);
-    cJSON_AddBoolToObject(map_selection, "exclude_last_map", g_config.map_selection.exclude_last_map);
-    cJSON_AddNumberToObject(map_selection, "timer", g_config.map_selection.timer);
-    cJSON* map_list = cJSON_CreateArray();
-    for (int i = 0; i < 21; ++i) {
-        cJSON_AddItemToArray(map_list, cJSON_CreateBool(g_config.map_selection.map_list[i]));
-    }
-    cJSON_AddItemToObject(map_selection, "map_list", map_list);
-    cJSON_AddItemToObject(json, "map_selection", map_selection);
-
-    cJSON* character_selection = cJSON_CreateObject();
-    cJSON_AddBoolToObject(character_selection, "charselect_mod_unlocked", g_config.character_selection.charselect_mod_unlocked);
-    cJSON_AddBoolToObject(character_selection, "allow_foreign_characters", g_config.character_selection.allow_foreign_characters);
-    cJSON_AddNumberToObject(character_selection, "charselect_timer", g_config.character_selection.charselect_timer);
-    cJSON_AddItemToObject(json, "character_selection", character_selection);
-
-    cJSON* gameplay = cJSON_CreateObject();
-    cJSON_AddNumberToObject(gameplay, "respawn_time", g_config.gameplay.respawn_time);
-    cJSON_AddNumberToObject(gameplay, "sudden_death_timer", g_config.gameplay.sudden_death_timer);
-    cJSON_AddNumberToObject(gameplay, "ring_appearance_timer", g_config.gameplay.ring_appearance_timer);
-    cJSON_AddNumberToObject(gameplay, "escape_time", g_config.gameplay.escape_time);
-    cJSON_AddNumberToObject(gameplay, "demonization_percentage", g_config.gameplay.demonization_percentage);
-    cJSON_AddBoolToObject(gameplay, "exe_camp_penalty", g_config.gameplay.exe_camp_penalty);
-    cJSON_AddBoolToObject(gameplay, "hide_player_characters", g_config.gameplay.hide_player_characters);
-    cJSON_AddBoolToObject(gameplay, "enable_achievements", g_config.gameplay.enable_achievements);
-    cJSON_AddBoolToObject(gameplay, "enable_sounds", g_config.gameplay.enable_sounds);
-    cJSON_AddBoolToObject(gameplay, "rmz_easy_mode", g_config.gameplay.rmz_easy_mode);
-    cJSON_AddItemToObject(json, "gameplay", gameplay);
-
-    cJSON* anticheat = cJSON_CreateObject();
-    cJSON_AddBoolToObject(anticheat, "palette_anticheat", g_config.gameplay.anticheat.palette_anticheat);
-    cJSON_AddBoolToObject(anticheat, "zone_anticheat", g_config.gameplay.anticheat.zone_anticheat);
-    cJSON_AddBoolToObject(anticheat, "distance_anticheat", g_config.gameplay.anticheat.distance_anticheat);
-    cJSON_AddBoolToObject(anticheat, "ability_anticheat", g_config.gameplay.anticheat.ability_anticheat);
-    cJSON_AddItemToObject(gameplay, "anticheat", anticheat);
-
-    cJSON* banana = cJSON_CreateObject();
-    cJSON_AddBoolToObject(banana, "disable_timer", g_config.gameplay.banana.disable_timer);
-    cJSON_AddBoolToObject(banana, "singleplayer", g_config.gameplay.banana.singleplayer);
-    cJSON_AddItemToObject(gameplay, "banana", banana);
-
-    cJSON* gmcycle = cJSON_CreateObject();
-    cJSON_AddBoolToObject(gmcycle, "overhell", g_config.gameplay.gmcycle.overhell);
-    cJSON_AddItemToObject(gameplay, "gmcycle", gmcycle);
-
-    cJSON* entities_misc = cJSON_CreateObject();
-
-    cJSON* global = cJSON_CreateObject();
-
-    cJSON* rings = cJSON_CreateObject();
-    cJSON_AddBoolToObject(rings, "enabled", g_config.gameplay.entities_misc.global.rings.enabled);
-    cJSON_AddNumberToObject(rings, "red_ring_chance", g_config.gameplay.entities_misc.global.rings.red_ring_chance);
-    cJSON_AddItemToObject(global, "rings", rings);
-
-    cJSON* spikes = cJSON_CreateObject();
-    cJSON_AddNumberToObject(spikes, "timer", g_config.gameplay.entities_misc.global.spikes.timer);
-    cJSON_AddItemToObject(global, "spikes", spikes);
-
-    cJSON_AddItemToObject(entities_misc, "global", global);
-
-    cJSON* map_specific = cJSON_CreateObject();
-
-    cJSON* you_cant_run = cJSON_CreateObject();
-
-    cJSON* gas = cJSON_CreateObject();
-    cJSON_AddNumberToObject(gas, "delay", g_config.gameplay.entities_misc.map_specific.you_cant_run.gas.delay);
-    cJSON_AddItemToObject(you_cant_run, "gas", gas);
-
-    cJSON_AddItemToObject(map_specific, "you_cant_run", you_cant_run);
-
-    cJSON* limp_city = cJSON_CreateObject();
-
-    cJSON* chain = cJSON_CreateObject();
-    cJSON_AddNumberToObject(chain, "delay", g_config.gameplay.entities_misc.map_specific.limb_city.chain.delay);
-    cJSON_AddNumberToObject(chain, "warning", g_config.gameplay.entities_misc.map_specific.limb_city.chain.warning);
-    cJSON_AddNumberToObject(chain, "shocking_time", g_config.gameplay.entities_misc.map_specific.limb_city.chain.shocking_time);
-    cJSON_AddItemToObject(limp_city, "chain", chain);
-
-    cJSON* eye = cJSON_CreateObject();
-    cJSON_AddNumberToObject(eye, "recharge_strength", g_config.gameplay.entities_misc.map_specific.limb_city.eye.recharge_strength);
-    cJSON_AddNumberToObject(eye, "recharge_timer", g_config.gameplay.entities_misc.map_specific.limb_city.eye.recharge_timer);
-    cJSON_AddNumberToObject(eye, "use_cost", g_config.gameplay.entities_misc.map_specific.limb_city.eye.use_cost);
-    cJSON_AddItemToObject(limp_city, "eye", eye);
-
-    cJSON_AddItemToObject(map_specific, "limp_city", limp_city);
-
-    cJSON* not_perfect = cJSON_CreateObject();
-    cJSON_AddNumberToObject(not_perfect, "switch_timer", g_config.gameplay.entities_misc.map_specific.not_perfect.switch_timer);
-    cJSON_AddNumberToObject(not_perfect, "switch_timer_chase", g_config.gameplay.entities_misc.map_specific.not_perfect.switch_timer_chase);
-    cJSON_AddNumberToObject(not_perfect, "switch_warning_timer", g_config.gameplay.entities_misc.map_specific.not_perfect.switch_warning_timer);
-    cJSON_AddNumberToObject(not_perfect, "switch_warning_timer_chase", g_config.gameplay.entities_misc.map_specific.not_perfect.switch_warning_timer_chase);
-    cJSON_AddItemToObject(map_specific, "not_perfect", not_perfect);
-
-    cJSON* kind_and_fair = cJSON_CreateObject();
-
-    cJSON* speedbox = cJSON_CreateObject();
-    cJSON_AddNumberToObject(speedbox, "timer", g_config.gameplay.entities_misc.map_specific.kind_and_fair.speedbox.timer);
-    cJSON_AddNumberToObject(speedbox, "timer_offset", g_config.gameplay.entities_misc.map_specific.kind_and_fair.speedbox.timer_offset);
-    cJSON_AddItemToObject(kind_and_fair, "speedbox", speedbox);
-
-    cJSON_AddItemToObject(map_specific, "kind_and_fair", kind_and_fair);
-
-    cJSON* act9 = cJSON_CreateObject();
-
-    cJSON* walls = cJSON_CreateObject();
-    cJSON_AddBoolToObject(walls, "enabled", g_config.gameplay.entities_misc.map_specific.act9.walls.enabled);
-    cJSON_AddItemToObject(act9, "walls", walls);
-
-    cJSON_AddItemToObject(map_specific, "act9", act9);
-
-    cJSON* nasty_paradise = cJSON_CreateObject();
-
-    cJSON* snowballs = cJSON_CreateObject();
-    cJSON_AddBoolToObject(snowballs, "enabled", g_config.gameplay.entities_misc.map_specific.nasty_paradise.snowballs.enabled);
-    cJSON_AddItemToObject(nasty_paradise, "snowballs", snowballs);
-
-    cJSON* ice = cJSON_CreateObject();
-    cJSON_AddNumberToObject(ice, "regeneration_timer", g_config.gameplay.entities_misc.map_specific.nasty_paradise.ice.regeneration_timer);
-    cJSON_AddItemToObject(nasty_paradise, "ice", ice);
-
-    cJSON_AddItemToObject(map_specific, "nasty_paradise", nasty_paradise);
-
-    cJSON* priceless_freedom = cJSON_CreateObject();
-    {
-    cJSON* black_rings = cJSON_CreateObject();
-    cJSON_AddBoolToObject(black_rings, "enabled", g_config.gameplay.entities_misc.map_specific.priceless_freedom.black_rings.enabled);
-    cJSON_AddItemToObject(priceless_freedom, "black_rings", black_rings);
-    }
-    cJSON_AddItemToObject(map_specific, "priceless_freedom", priceless_freedom);
-
-    cJSON* hills = cJSON_CreateObject();
-
-    cJSON* thunder = cJSON_CreateObject();
-    cJSON_AddNumberToObject(thunder, "timer", g_config.gameplay.entities_misc.map_specific.hills.thunder.timer);
-    cJSON_AddNumberToObject(thunder, "timer_offset", g_config.gameplay.entities_misc.map_specific.hills.thunder.timer_offset);
-    cJSON_AddItemToObject(hills, "thunder", thunder);
-
-    cJSON_AddItemToObject(map_specific, "hills", hills);
-
-    cJSON* torture_cave = cJSON_CreateObject();
-
-    cJSON* acid = cJSON_CreateObject();
-    cJSON_AddNumberToObject(acid, "delay", g_config.gameplay.entities_misc.map_specific.torture_cave.acid.delay);
-    cJSON_AddItemToObject(torture_cave, "acid", acid);
-
-    cJSON_AddItemToObject(map_specific, "torture_cave", torture_cave);
-
-    cJSON *dark_tower = cJSON_CreateObject();
-
-    cJSON* stalactites = cJSON_CreateObject();
-    cJSON_AddNumberToObject(stalactites, "timer", g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.timer);
-    cJSON_AddNumberToObject(stalactites, "timer_offset", g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.timer_offset);
-    cJSON_AddNumberToObject(stalactites, "acceleration", g_config.gameplay.entities_misc.map_specific.dark_tower.stalactites.acceleration);
-    cJSON_AddItemToObject(dark_tower, "stalactites", stalactites);
-
-    cJSON* balls = cJSON_CreateObject();
-    cJSON_AddNumberToObject(balls, "shift_per_tick", g_config.gameplay.entities_misc.map_specific.dark_tower.balls.shift_per_tick);
-    cJSON_AddItemToObject(dark_tower, "balls", balls);
-
-    cJSON_AddItemToObject(map_specific, "dark_tower", dark_tower);
-
-    cJSON* haunting_dream = cJSON_CreateObject();
-
-    cJSON* doors = cJSON_CreateObject();
-    cJSON_AddNumberToObject(doors, "toggle_delay", g_config.gameplay.entities_misc.map_specific.haunting_dream.doors.toggle_delay);
-    cJSON_AddItemToObject(haunting_dream, "doors", doors);
-
-    cJSON_AddItemToObject(map_specific, "haunting_dream", haunting_dream);
-
-    cJSON* fart_zone = cJSON_CreateObject();
-
-    cJSON* dummy = cJSON_CreateObject();
-    cJSON_AddNumberToObject(dummy, "velocity", g_config.gameplay.entities_misc.map_specific.fart_zone.dummy.velocity);
-    cJSON_AddItemToObject(fart_zone, "dummy", dummy);
-
-    cJSON_AddItemToObject(map_specific, "fart_zone", fart_zone);
-
-    cJSON_AddItemToObject(entities_misc, "map_specific", map_specific);
-
-    cJSON *character_specific = cJSON_CreateObject();
-
-    cJSON *tails = cJSON_CreateObject();
-    cJSON_AddNumberToObject(tails, "projectile_speed", g_config.gameplay.entities_misc.character_specific.tails.projectile_speed);
-    cJSON_AddNumberToObject(tails, "projectile_timeout_timer", g_config.gameplay.entities_misc.character_specific.tails.projectile_timeout_timer);
-    cJSON_AddItemToObject(character_specific, "tails", tails);
-
-    cJSON_AddItemToObject(entities_misc, "character_specific", character_specific);
-
-    cJSON_AddItemToObject(gameplay, "entities_misc", entities_misc);
-
-    cJSON* results_misc = cJSON_CreateObject();
-    cJSON_AddBoolToObject(results_misc, "enabled", g_config.results_misc.enabled);
-    cJSON_AddNumberToObject(results_misc, "timer", g_config.results_misc.timer);
-    cJSON_AddBoolToObject(results_misc, "pride", g_config.results_misc.pride);
-    cJSON_AddItemToObject(json, "results_misc", results_misc);
-
-    cJSON* user_interface = cJSON_CreateObject();
-    cJSON_AddBoolToObject(user_interface, "enabled", g_config.user_interface.enabled);
-    cJSON_AddItemToObject(json, "user_interface", user_interface);
-
-    cJSON* other = cJSON_CreateObject();
-    cJSON_AddBoolToObject(other, "ignore_inadequate_configuration", g_config.other.ignore_inadequate_configuration);
-    cJSON_AddItemToObject(json, "other", other);
-
 	RAssert(collection_save(CONFIG_FILE, json));
     cJSON_Delete(json);
 	return true;

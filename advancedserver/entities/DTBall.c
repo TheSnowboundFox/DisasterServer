@@ -7,14 +7,14 @@ bool dtball_tick(Server* server, Entity* entity)
 
 	if (ball->side)
 	{
-		ball->state += 0.015 * server->delta;
+		ball->state += g_config.gameplay.entities_misc.map_specific.dark_tower.balls.shift_per_tick * server->delta;
 
 		if (ball->state >= 1)
 			ball->side = 0;
 	}
 	else
 	{
-		ball->state -= 0.015 * server->delta;
+		ball->state -= g_config.gameplay.entities_misc.map_specific.dark_tower.balls.shift_per_tick * server->delta;
 
 		if (ball->state <= -1)
 			ball->side = 1;

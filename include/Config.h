@@ -90,43 +90,60 @@ typedef struct
 } Spikes;
 typedef struct
 {
-    Rings        rings;
-    Spikes      spikes;
+    Rings               rings;
+    Spikes              spikes;
 } Global;
 
 typedef struct
 {
-    uint16_t     delay;
+    uint8_t             amount;
+    uint8_t             required_for_exit;
+} Shards;
+typedef struct
+{
+    bool                enabled;
+    uint8_t             ring_chance;
+    uint8_t             red_ring_chance;
+} Slugs;
+typedef struct
+{
+    Shards              shards;
+    Slugs               slugs;
+} RavineMist;
+
+typedef struct
+{
+    uint16_t            delay;
 } Gas;
 typedef struct
 {
-    Gas        gas;
+    Gas                 gas;
 } YouCantRun;
 
 typedef struct
 {
-    uint8_t     recharge_strength;
-    uint8_t     recharge_timer;
-    uint8_t     use_cost;
+    uint8_t             recharge_strength;
+    uint8_t             recharge_timer;
+    uint8_t             use_cost;
 } Eye;
 typedef struct
 {
-    uint16_t	delay;
-    uint8_t     warning;
-    uint8_t     shocking_time;
+    uint16_t	        delay;
+    uint8_t             warning;
+    uint8_t             shocking_time;
 } Chain;
 typedef struct
 {
-    Eye         eye;
-    Chain       chain;
+    Eye                 eye;
+    Chain               chain;
 } LimbCity;
 
 typedef struct
 {
-    uint8_t     switch_timer;
-    uint8_t     switch_timer_chase;
-    uint8_t     switch_warning_timer;
-    uint8_t     switch_warning_timer_chase;
+    uint8_t             switch_timer;
+    uint8_t             switch_timer_chase;
+    uint8_t             switch_warning_timer;
+    uint8_t             switch_warning_timer_chase;
 } NotPerfect;
 
 typedef struct
@@ -198,7 +215,7 @@ typedef struct
 } Stalactites;
 typedef struct
 {
-    uint8_t             shift_per_tick;
+    double              shift_per_tick;
 } Balls;
 typedef struct
 {
@@ -222,10 +239,12 @@ typedef struct
 typedef struct
 {
     DummyConfig         dummy;
+    BlackRings          black_rings;
 } FartZone;
 
 typedef struct
 {
+    RavineMist          ravine_mist;
     YouCantRun          you_cant_run;
     LimbCity            limb_city;
     NotPerfect          not_perfect;
@@ -267,7 +286,6 @@ typedef struct
     bool                hide_player_characters;
     bool                enable_achievements;
     bool                enable_sounds;
-    bool                rmz_easy_mode;
     EntitiesMisc        entities_misc;
     Anticheat           anticheat;
     Banana              banana;

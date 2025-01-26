@@ -43,17 +43,14 @@ bool slug_init(Server* server, Entity* entity)
 {
 	Slug* slug = (Slug*)entity;
 
-    if(g_config.gameplay.entities_misc.global.rings.enabled){
-        int num = rand() % 100;
-        if (num < 50)
-            slug->ring = SLUG_NORING;
-        else if (num >= 40 && num < 90)
-            slug->ring = SLUG_RING;
-        else
-            slug->ring = SLUG_REDRING;
-    }
-    else
-        slug->ring = SLUG_NORING;
+	int num = rand() % 100;
+	if (num < g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.red_ring_chance)
+        slug->ring = SLUG_REDRING;
+	else if (num >= g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.red_ring_chance
+		&& num < g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.red_ring_chance + g_config.gameplay.entities_misc.map_specific.ravine_mist.slugs.ring_chance)
+		slug->ring = SLUG_RING;
+	else
+		slug->ring = SLUG_NORING;
 
 	slug->sX = slug->pos.x;
 	slug->sY = slug->pos.y;
